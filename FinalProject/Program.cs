@@ -21,7 +21,7 @@ namespace FinalProject
             }
         }
 
-        public static void DisplayBoard(int index)
+        public static void DisplayBoard(int index, int turn)
         {
             Console.Clear();
 
@@ -52,6 +52,8 @@ namespace FinalProject
             }
             Console.WriteLine();
 
+
+            if (turn == 0) Console.WriteLine("{0,14}","X 's turn"); else Console.WriteLine("{0,14}", "O 's turn");
         }
     }
 
@@ -62,7 +64,7 @@ namespace FinalProject
     {
         public String PlayerChar { get; set; }
         public int Index { get; set; }
-        public int Height { get; set; }
+        public int Pos { get; set; }
 
 
         public Player(String playerChar)
@@ -72,29 +74,100 @@ namespace FinalProject
 
         public bool CheckWinner()
         {
+            int count;
+            int limit;
+
+            // Vertical Check
+            count = 1;
+            for (int i = 1; i <= Pos; i++)
+            {
+                if (Board.GameBoard[Pos-i, Index] == PlayerChar) count++;
+                else break;
+            }
+            for (int i = 1; i < Board.GameBoard.GetLength(0) - Pos; i++)
+            {
+                if (Board.GameBoard[Pos + i, Index] == PlayerChar) count++;
+                else break;
+            }
+            if (count >= 4) return true;
+
+            // Horizontal Check
+            count = 1;
+            for (int i = 1; i <= Index; i++)
+            {
+                if (Board.GameBoard[Pos, Index - i] == PlayerChar) count++;
+                else break;
+            }
+            for (int i = 1; i < Board.GameBoard.GetLength(0) - Index; i++)
+            {
+                if (Board.GameBoard[Pos, Index + i] == PlayerChar) count++;
+                else break;
+            }
+            if (count >= 4) return true;
+
+            // Diagonal 1 Check
+            count = 1;
+            limit = Math.Min(Index, Pos);
+            for (int i = 1; i <= limit; i++)
+            {
+                if (Board.GameBoard[Pos - i, Index - i] == PlayerChar) count++;
+                else break;
+            }
+            limit = Board.GameBoard.GetLength(0) - Pos < Board.GameBoard.GetLength(1) - Index? Board.GameBoard.GetLength(0) - Pos : Board.GameBoard.GetLength(1) - Index;
+            for (int i = 1; i < limit; i++)
+            {
+                if (Board.GameBoard[Pos + i, Index + i] == PlayerChar) count++;
+                else break;
+            }
+            if (count >= 4) return true;
+
+            // Diagonal 2 Check
+            count = 1;
+            limit = Pos < Board.GameBoard.GetLength(1) - Index ? Pos : Board.GameBoard.GetLength(1) - Index;
+            for (int i = 1; i < limit; i++)
+            {
+                if (Board.GameBoard[Pos - i, Index + i] == PlayerChar) count++;
+                else break;
+            }
+            limit = Index < Board.GameBoard.GetLength(0) - Pos ? Index : Board.GameBoard.GetLength(0) - Pos;
+            for (int i = 1; i < limit; i++)
+            {
+                if (Board.GameBoard[Pos + i, Index - i] == PlayerChar) count++;
+                else break;
+            }
+            if (count >= 4) return true;
+
             return false;
         }
 
-        public void MakeMove()
+        public bool CheckDraw()
+        {
+            for (int i = 0; i < Board.GameBoard.GetLength(1); i++)
+            {
+                if(Board.GameBoard[0, i] == "#") return false;
+            }
+            return true;
+        }
+
+        public void MakeMove(int turn)
         {
             Index = 0;
             bool inMenu = true;
             ConsoleKeyInfo keyinfo;
 
-            Board.DisplayBoard(Index);
+            Board.DisplayBoard(Index, turn);
 
 
             while (inMenu)
             {
                 keyinfo = Console.ReadKey();
 
-                // Handle each key input (down arrow will write the menu again with a different selected item)
                 if (keyinfo.Key == ConsoleKey.RightArrow)
                 {
                     if (Index + 1 < 7)
                     {
                         Index++;
-                        Board.DisplayBoard(Index);
+                        Board.DisplayBoard(Index, turn);
                     }
                 }
                 if (keyinfo.Key == ConsoleKey.LeftArrow)
@@ -102,15 +175,14 @@ namespace FinalProject
                     if (Index - 1 >= 0)
                     {
                         Index--;
-                        Board.DisplayBoard(Index);
+                        Board.DisplayBoard(Index, turn);
                     }
                 }
 
-                // Handle different action for the option
                 if (keyinfo.Key == ConsoleKey.Enter)
                 {
                     inMenu = PutPlayerChar();
-                    if (!inMenu) Board.DisplayBoard(Index);
+                    if (!inMenu) Board.DisplayBoard(Index, turn);
                 }
 
                 if (keyinfo.Key == ConsoleKey.Escape)
@@ -123,19 +195,19 @@ namespace FinalProject
 
         public bool PutPlayerChar()
         {
-            Height = -1;
+            Pos = -1;
 
             for(int i = 5; i >= 0; i--)
             {
                 if(Board.GameBoard[i, Index] == "#")
                 {
-                    Height = i;
+                    Pos = i;
                     break;
                 }
             }
-            if (Height == -1) return true;
+            if (Pos == -1) return true;
 
-            Board.GameBoard[Height, Index] = this.PlayerChar;
+            Board.GameBoard[Pos, Index] = this.PlayerChar;
             return false;
         }
 
@@ -233,11 +305,19 @@ namespace FinalProject
             {
                 turn %= 2;
 
-                Players[turn].MakeMove();
+                Players[turn].MakeMove(turn);
 
                 if(Players[turn].CheckWinner())
                 {
                     Gameon = false;
+                    Console.SetCursorPosition(0, Console.CursorTop - 1);
+                    Console.WriteLine("{0,3} {1}", Players[turn].PlayerChar, "is the Winner");
+                }
+
+                if (Players[turn].CheckDraw())
+                {
+                    Gameon = false;
+                    Console.WriteLine("It is a Draw");
                 }
                 turn++;
             }
@@ -250,9 +330,9 @@ namespace FinalProject
             Console.Clear();
 
             Console.WriteLine("SODV1202: Introduction to Object Oriented Programming");
-            Console.WriteLine("");
-            Console.WriteLine("");
-            Console.WriteLine("");
+            Console.WriteLine("Final Project: Connect Four");
+            Console.WriteLine("Group Name: 404 Found");
+            Console.WriteLine("Members: Jagdeep Singh (j.singh2232@mybvc.ca)");
 
             Console.Write("{0,-2}", ">");
             Console.WriteLine(InfoOption.Name);
