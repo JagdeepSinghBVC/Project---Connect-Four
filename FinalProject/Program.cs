@@ -8,8 +8,9 @@ namespace FinalProject
 
     public static class Board
     {
-        public static String [,] GameBoard = new String[6, 7];
+        public static String [,] GameBoard = new String[6, 7];  // 2D array for 6*7 Connect Four Grid
 
+        // Initialize all elements of GameBoard array with '#'
         public static void intializeValues()
         {
             for(int i = 0; i < GameBoard.GetLength(0); i++)
@@ -21,10 +22,12 @@ namespace FinalProject
             }
         }
 
+        // Displays the Connect Four Grid
         public static void DisplayBoard(int index, int turn)
         {
             Console.Clear();
 
+            // Displays the Selector on top
             Console.Write("{0,2}", "");
             for (int i = 0; i < GameBoard.GetLength(1); i++)
             {
@@ -33,7 +36,7 @@ namespace FinalProject
             }
             Console.WriteLine();
 
-
+            // Displays the game grid
             for (int i = 0; i < GameBoard.GetLength(0); i++)
             {
                 Console.Write("{0,2}", "|");
@@ -44,7 +47,7 @@ namespace FinalProject
                 Console.WriteLine("{0,2}", "|");
             }
 
-
+            // Displays the dashes below
             Console.Write("{0,2}", "");
             for (int i = 0; i < GameBoard.GetLength(1); i++)
             {
@@ -52,14 +55,14 @@ namespace FinalProject
             }
             Console.WriteLine();
 
-
+            // Displays player turn
             if (turn == 0) Console.WriteLine("{0,14}","X 's turn"); else Console.WriteLine("{0,14}", "O 's turn");
         }
     }
 
 
 
-
+    
     public class Player
     {
         public String PlayerChar { get; set; }
@@ -72,6 +75,7 @@ namespace FinalProject
             PlayerChar = playerChar;
         }
 
+        // Checks if the Player has won the match or not
         public bool CheckWinner()
         {
             int count;
@@ -123,13 +127,13 @@ namespace FinalProject
 
             // Diagonal 2 Check
             count = 1;
-            limit = Pos < Board.GameBoard.GetLength(1) - Index ? Pos : Board.GameBoard.GetLength(1) - Index;
+            limit = Pos < Board.GameBoard.GetLength(1) - Index ? Pos + 1 : Board.GameBoard.GetLength(1) - Index;
             for (int i = 1; i < limit; i++)
             {
                 if (Board.GameBoard[Pos - i, Index + i] == PlayerChar) count++;
                 else break;
             }
-            limit = Index < Board.GameBoard.GetLength(0) - Pos ? Index : Board.GameBoard.GetLength(0) - Pos;
+            limit = Index < Board.GameBoard.GetLength(0) - Pos ? Index + 1 : Board.GameBoard.GetLength(0) - Pos;
             for (int i = 1; i < limit; i++)
             {
                 if (Board.GameBoard[Pos + i, Index - i] == PlayerChar) count++;
@@ -140,6 +144,7 @@ namespace FinalProject
             return false;
         }
 
+        // Checks if all grid is filled hence draw
         public bool CheckDraw()
         {
             for (int i = 0; i < Board.GameBoard.GetLength(1); i++)
@@ -149,6 +154,8 @@ namespace FinalProject
             return true;
         }
 
+        // Runs when player has to make a move 
+        // Is responsible for the movement of the cursor and selecting coloumn by player
         public void MakeMove(int turn)
         {
             Index = 0;
@@ -193,6 +200,7 @@ namespace FinalProject
             }
         }
 
+        // Puts the player charter in the GameBoard Array on the available spot in column if available
         public bool PutPlayerChar()
         {
             Pos = -1;
@@ -214,8 +222,6 @@ namespace FinalProject
     }
 
 
-
-
     public class Option
     {
         public string Name { get; }
@@ -233,7 +239,7 @@ namespace FinalProject
     internal static class Program
     {
         public static List<Option> MenuOptions;
-        public static Option InfoOption;
+        public static Option BackOption;
         public static List<Player> Players;
 
         static void Main(string[] args)
@@ -241,6 +247,7 @@ namespace FinalProject
             DisplayMenu();
         }
 
+        // Displays the main Menu of the Game
         public static void DisplayMenu()
         {
             MenuOptions = new List<Option>
@@ -260,7 +267,6 @@ namespace FinalProject
             {
                 keyinfo = Console.ReadKey();
 
-                // Handle each key input (down arrow will write the menu again with a different selected item)
                 if (keyinfo.Key == ConsoleKey.DownArrow)
                 {
                     if (index + 1 < MenuOptions.Count)
@@ -269,6 +275,7 @@ namespace FinalProject
                         WriteMenu(MenuOptions, MenuOptions[index]);
                     }
                 }
+
                 if (keyinfo.Key == ConsoleKey.UpArrow)
                 {
                     if (index - 1 >= 0)
@@ -278,7 +285,6 @@ namespace FinalProject
                     }
                 }
 
-                // Handle different action for the option
                 if (keyinfo.Key == ConsoleKey.Enter)
                 {
                     MenuOptions[index].Selected.Invoke();
@@ -288,25 +294,32 @@ namespace FinalProject
             }
         }
 
+        // Handles the running of the main game
         public static void Game()
         {
+            // Initalizes the GameBoard
             Board.intializeValues();
 
+            // Makes two player objects to play
             Players = new List<Player>
             {
                 new Player("X"),
                 new Player("O")
             };
 
+            BackOption = new Option("Back", DisplayMenu);
             bool Gameon = true;
             int turn = 0;
 
+
+            // Runs the Game
             while (Gameon)
             {
                 turn %= 2;
-
+                // Player turn
                 Players[turn].MakeMove(turn);
 
+                // Check if the turn made lead to win and if so, shows the winner
                 if(Players[turn].CheckWinner())
                 {
                     Gameon = false;
@@ -314,28 +327,20 @@ namespace FinalProject
                     Console.WriteLine("{0,3} {1}", Players[turn].PlayerChar, "is the Winner");
                 }
 
+                // Checks if the turn made lead to draw and if so, shows draw message
                 if (Players[turn].CheckDraw())
                 {
                     Gameon = false;
                     Console.WriteLine("It is a Draw");
                 }
-                turn++;
+
+                turn++; // turn increment
             }
-        }
 
-        public static void DisplayInfo()
-        {
-            InfoOption = new Option("Back", DisplayMenu);
 
-            Console.Clear();
-
-            Console.WriteLine("SODV1202: Introduction to Object Oriented Programming");
-            Console.WriteLine("Final Project: Connect Four");
-            Console.WriteLine("Group Name: 404 Found");
-            Console.WriteLine("Members: Jagdeep Singh (j.singh2232@mybvc.ca)");
-
+            // Shows Restart and back options after game is over
             Console.Write("{0,-2}", ">");
-            Console.WriteLine(InfoOption.Name);
+            Console.WriteLine(BackOption.Name);
 
             ConsoleKeyInfo keyinfo;
             bool inMenu = true;
@@ -346,13 +351,46 @@ namespace FinalProject
 
                 if (keyinfo.Key == ConsoleKey.Enter)
                 {
-                    InfoOption.Selected.Invoke();
+                    BackOption.Selected.Invoke();
+                    inMenu = false;
+                }
+            }
+        }
+
+
+        // Displays the Info Page
+        public static void DisplayInfo()
+        {
+            BackOption = new Option("Back", DisplayMenu);
+
+            Console.Clear();
+
+            // Displays the program Info
+            Console.WriteLine("SODV1202: Introduction to Object Oriented Programming");
+            Console.WriteLine("Final Project: Connect Four");
+            Console.WriteLine("Group Name: 404 Found");
+            Console.WriteLine("Members: Jagdeep Singh (j.singh2232@mybvc.ca)");
+
+            // Shows the back option
+            Console.Write("{0,-2}", ">");
+            Console.WriteLine(BackOption.Name);
+
+            ConsoleKeyInfo keyinfo;
+            bool inMenu = true;
+            while (inMenu)
+            {
+                keyinfo = Console.ReadKey();
+
+                if (keyinfo.Key == ConsoleKey.Enter)
+                {
+                    BackOption.Selected.Invoke();
                     inMenu = false;
                 }
             }
 
         }
 
+        // Writes the Menu Options provided
         static void WriteMenu(List<Option> options, Option selectedOption)
         {
             Console.Clear();
